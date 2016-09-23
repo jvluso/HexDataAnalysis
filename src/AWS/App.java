@@ -1,16 +1,20 @@
 package AWS;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
+import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class App {
 	
@@ -66,23 +70,86 @@ public class App {
             		new ValueMap().with(":c", c.path("uuid").asText())
             		);*/
 
+		result= archetypeTable.scan("Version = :v",
+        		null,
+        		new ValueMap().with(":v", 0)
+        		);
+    	Map<String,Archetype> champs = new HashMap<String,Archetype>();
     	
-    	for(JsonNode c: CardList.getInstance().getChampions()){
-    		result= archetypeTable.scan("Champion = :c",
-            		"listAttr, #m",
-            		new NameMap().with("#m", "Match"),
-            		new ValueMap().with(":c", c.path("uuid").asText())
-            		);
-            System.out.println(c.path("name").asText());
-            int i=0;
-            for(Item o:result){
-            	i+=o.getList("Match").size();
-            }
-            System.out.println(i);
-            
+        for(Item o:result){
+        	String champ=o.getString("Champion");
+        	if(champs.get(champ)==null){
+        		Archetype a=new Archetype(champ);
+        		a.addEntry(o);
+        		champs.put(champ,a);
+        	}else{
+        		Archetype a=champs.get(champ);
+        		a.addEntry(o);
+        		champs.put(champ,a);
+        	}
+        }
+        
+        
+        List<Archetype> topChamps = new ArrayList<Archetype>(5);
+    	for(String o:champs.keySet()){
+        	if(champs.get(o)!=null){
+        		if(topChamps.size() < 5){
+    				topChamps.add(champs.get(o));
+        		}else{
+	        		for(int i=0;i<5;i++){
+	        			if(champs.get(o).getMatches().size() > topChamps.get(i).getMatches().size()){
+	        				topChamps.set(i, champs.get(o));
+	        				break;
+	        			}
+	        		}
+        		}
+        	}
     	}
-            
+    	for(int i=0;i<5;i++){
+    		System.out.println(topChamps.get(i).getName());
+    		System.out.println(topChamps.get(i).getMatches().size());
+    		System.out.println(topChamps.get(i).getMatches().get(0));
+    	}
     	
+
+		System.out.println("done");
+		
+		
+        TableKeysAndAttributes forumTableKeysAndAttributes = new TableKeysAndAttributes("Matches");
+		
+		for(String s:topChamps.get(0).getMatches()){
+			if(topChamps.get(1).getMatches().contains(s)){
+				forumTableKeysAndAttributes.addHashOnlyPrimaryKey("TimePlayerKey",s);
+			}
+		}
+		
+		
+		BatchGetItemOutcome outcome = dynamoDB.batchGetItem(forumTableKeysAndAttributes);
+		
+        List<Item> items = outcome.getTableItems().get("Matches");
+        int wins=0;
+        int losses=0;
+        for (Item item : items) {
+            if(topChamps.get(0).getDeckListHashes().contains(item.getInt("PlayerOneDeck"))){
+            	if(item.getInt("PlayerOneWins")==2){
+            		wins++;
+            	}else{
+            		losses++;
+            	}
+            }else{
+            	if(item.getInt("PlayerOneWins")!=2){
+            		wins++;
+            	}else{
+            		losses++;
+            	}
+            }
+        }
+        
+        System.out.println(items.size());
+        System.out.print("Wins: ");
+        System.out.println(wins);
+        System.out.print("Losses: ");
+        System.out.println(losses);
     }
     
     
