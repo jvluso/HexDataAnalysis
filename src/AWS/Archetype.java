@@ -27,6 +27,11 @@ public class Archetype {
 		deckListHashes.add(item.getInt("HashCode"));
 	}
 	
+	public void addArchetype(Archetype a){
+		matches.addAll(a.getMatches());
+		deckListHashes.addAll(a.getDeckListHashes());
+	}
+	
 	public List<String> getMatches(){
 		return matches;
 	}
@@ -34,5 +39,7 @@ public class Archetype {
 	public List<Integer> getDeckListHashes(){
 		return deckListHashes;
 	}
+	
+	
 	
 }

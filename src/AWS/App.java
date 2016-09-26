@@ -74,6 +74,13 @@ public class App {
         		null,
         		new ValueMap().with(":v", 0)
         		);
+		
+		ArchetypeGroup topGroup = new ArchetypeGroup(result);
+		
+		
+		System.out.println(topGroup.getTopChamps().get(1).getMatches().get(1));
+		
+		/*
     	Map<String,Archetype> champs = new HashMap<String,Archetype>();
     	
         for(Item o:result){
@@ -88,6 +95,8 @@ public class App {
         		champs.put(champ,a);
         	}
         }
+        
+        
         
         
         List<Archetype> topChamps = new ArrayList<Archetype>(5);
@@ -150,6 +159,8 @@ public class App {
         System.out.println(wins);
         System.out.print("Losses: ");
         System.out.println(losses);
+        
+        */
     }
     
     
