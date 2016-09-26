@@ -54,7 +54,7 @@ public class ArchetypeGroup {
 
     	for(String o:champs.keySet()){
         	if(!topChamps.contains(o)){
-        		topChamps.get(6).addArchetype(champs.get(o));
+        		topChamps.get(5).addArchetype(champs.get(o));
         	}
         }
 	}

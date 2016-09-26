@@ -76,9 +76,14 @@ public class App {
         		);
 		
 		ArchetypeGroup topGroup = new ArchetypeGroup(result);
+		System.out.println(topGroup.getTopChamps().get(0).getName());
 		
-		
-		System.out.println(topGroup.getTopChamps().get(1).getMatches().get(1));
+		for(Archetype a:topGroup.getTopChamps()){
+			System.out.println(a.getName());
+			Matchup m = new Matchup(a,topGroup.getTopChamps().get(0),dynamoDB);
+			System.out.println(m.getWins());
+			System.out.println(m.getLosses());
+		}
 		
 		/*
     	Map<String,Archetype> champs = new HashMap<String,Archetype>();
