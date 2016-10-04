@@ -14,9 +14,15 @@ import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,14 +49,14 @@ public class App {
         new MatchStream(new numFilteredStream(gzipStr)).uploadHexTournamentData();
     */
 
-    	/*
+    	
 
     	Hashtable<String,JsonNode> cardHash = new Hashtable<String,JsonNode>(5*1024);
     	
     	for(String s:Sets){
 
 			JsonParser parser = new JsonFactory()
-			    .createParser(new File("/home/jeremy/hexSets/" + s));
+			    .createParser(new File("src/AWS/hexSets/" + s));
 			JsonNode rootNode = new ObjectMapper().readTree(parser);
 
 	        JsonNode cards = rootNode.path("cards");
@@ -60,7 +66,7 @@ public class App {
 	        parser.close();
 		        
     	}
-        */
+        
     	
     	
 /*
@@ -183,19 +189,17 @@ public class App {
         Table matchTable = dynamoDB.getTable("Matches");
 
         ScanSpec aspec = new ScanSpec();
-        ScanSpec mspec = new ScanSpec();
 
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
-        ItemCollection<ScanOutcome> matchItems = matchTable.scan(mspec);
         
-        ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchItems);
+        ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
         
-        for(int i=0;i<5; i++){
+        for(int i=0;i<10; i++){
         	for(int j=0;j<i;j++){
         		Matchup m=group.getMatchup(i, j);
-        		System.out.print(group.getChamp(i).getName());
+        		System.out.print(cardHash.get("\"" + group.getChamp(i).getName() + "\"").get("name"));
         		System.out.print(" vs. ");
-        		System.out.println(group.getChamp(j).getName());
+        		System.out.println(cardHash.get("\"" + group.getChamp(j).getName() + "\"").get("name"));
 
         		System.out.print(m.getWins());
         		System.out.print(" to ");

@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 
-public class Archetype {
+public class Archetype implements Comparable<Archetype> {
 
 	private String name;
 	private List<String> matches;
@@ -38,6 +38,14 @@ public class Archetype {
 	
 	public List<Integer> getDeckListHashes(){
 		return deckListHashes;
+	}
+
+	@Override
+	public int compareTo(Archetype o) {
+		int a=matches.size();
+		int b=o.getMatches().size();
+		return (a > b ? -1 :
+               (a == b ? 0 : 1));
 	}
 	
 	

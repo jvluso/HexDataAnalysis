@@ -1,6 +1,6 @@
 package AWS;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,19 +8,20 @@ import java.util.Map;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
 
 public class ArchetypeGroup {
 	
 	private List<Archetype> topChamps;
 	private ItemCollection<ScanOutcome> archetypeResult;
-	private ItemCollection<ScanOutcome> matchResult;
+	private Table matchTable;
 
-	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypes, ItemCollection<ScanOutcome> matches){
+	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypes, Table match){
 		
 		Map<String,Archetype> champs = new HashMap<String,Archetype>();
 
 		archetypeResult = archetypes;
-		matchResult = matches;
+		matchTable = match;
 		
 		
         for(Item o:archetypeResult){
@@ -38,38 +39,16 @@ public class ArchetypeGroup {
         }
         
 
+        Archetype[] champList = champs.values().toArray(new Archetype[0]);
+        Arrays.sort(champList);
+        topChamps = Arrays.asList(champList);
         
-        topChamps = new ArrayList<Archetype>(6);
-    	for(String o:champs.keySet()){
-        	if(champs.get(o)!=null){
-        		if(topChamps.size() < 5){
-    				topChamps.add(champs.get(o));
-        		}else{
-	        		for(int i=0;i<5;i++){
-	        			if(champs.get(o).getMatches().size() > topChamps.get(i).getMatches().size()){
-	        				topChamps.set(i, champs.get(o));
-	        				break;
-	        			}
-	        		}
-        		}
-        	}
-    	}
-        
-
-		topChamps.add(new Archetype("other"));
-		
-
-    	for(String o:champs.keySet()){
-        	if(!topChamps.contains(o)){
-        		topChamps.get(5).addArchetype(champs.get(o));
-        	}
-        }
 	}
 	
 
 	
 	public Matchup getMatchup(int a, int b){
-		return new Matchup(topChamps.get(a), topChamps.get(b), matchResult);
+		return new Matchup(topChamps.get(a), topChamps.get(b), matchTable);
 	}
 	
 	public Archetype getChamp(int i){
