@@ -1,20 +1,26 @@
 package AWS;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
+import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 public class App {
 	
@@ -23,11 +29,19 @@ public class App {
 			                "ArmiesOfMyth.json",
 			                "PrimalDawn.json",
 			                "Herofall.json"};
-	
-	
     	
 
     public static void main(String[] args) throws Exception {
+    	
+
+/*
+ * 
+ * for uploading new days of data
+    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-09-29.gz"));
+    	InputStream gzipStr = new GZIPInputStream(fileStr);
+    	
+        new MatchStream(new numFilteredStream(gzipStr)).uploadHexTournamentData();
+    */
 
     	/*
 
@@ -47,8 +61,117 @@ public class App {
 		        
     	}
         */
-        //new MatchStream(new numFilteredStream(new FileInputStream(new File("/home/jeremy/API.log")))).uploadStream();
-    
+    	
+    	
+/*
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        //Table matchTable = dynamoDB.getTable("Matches");
+        Table deckTable = dynamoDB.getTable("Decklists");
+        Table archetypeTable = dynamoDB.getTable("Archetypes");
+
+        ScanSpec spec = new ScanSpec();
+
+        ItemCollection<ScanOutcome> items = deckTable.scan(spec);
+
+        Iterator<Item> iterator = items.iterator();
+        Item item = null;
+        int i=0;
+        while (iterator.hasNext()) {
+        	item = iterator.next();
+        	i++;
+        	ArchetypeStream.addItem(item, archetypeTable);
+            System.out.println(i);
+        }
+		*/
+    	
+/*
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        Table matchTable = dynamoDB.getTable("Matches");
+
+        ScanSpec spec = new ScanSpec();
+
+        ItemCollection<ScanOutcome> items = matchTable.scan(spec);
+
+        Iterator<Item> iterator = items.iterator();
+        Item item = null;
+        HashMap<Integer,List<String>> players = new HashMap<Integer,List<String>>();
+        
+        int i=0;
+        while (iterator.hasNext()) {
+        	item = iterator.next();
+        	Integer p1 = item.getInt("PlayerOne");
+        	Integer p2 = item.getInt("PlayerTwo");
+        	String game = item.getString("TournamentTime");
+        	
+        	if(players.containsKey(p1)){
+        		players.get(p1).add(game);
+        	}else{
+        		List<String> list=new LinkedList<String>();
+        		list.add(game);
+        		players.put(p1,list);
+        	}
+
+        	if(players.containsKey(p2)){
+        		players.get(p2).add(game);
+        	}else{
+        		List<String> list=new LinkedList<String>();
+        		list.add(game);
+        		players.put(p2,list);
+        	}
+        	
+        	i++;
+        }
+    	
+
+        List<Integer>topPlayers = new LinkedList<Integer>();
+    	for(Integer o:players.keySet()){
+        	if(players.get(o)!=null){
+	        	if(players.get(o).size() > 50){
+	        		topPlayers.add(o);
+	        	}
+        	}
+    	}
+    	i=0;
+    	for(Integer o:topPlayers){
+    		System.out.println("Player");
+    		System.out.println(o);
+    		System.out.println("Games");
+    		System.out.println(players.get(o).size());
+    		i+=players.get(o).size();
+    	}
+
+		System.out.println("Games");
+		System.out.println(i);
+		System.out.println("Players");
+    	System.out.println(topPlayers.size());
+    	
+    	
+    	
+    	
+
+        iterator = items.iterator();
+        item = null;
+        List<Item> topGames= new LinkedList<Item>();
+        
+        while (iterator.hasNext()) {
+        	item = iterator.next();
+        	Integer p1 = item.getInt("PlayerOne");
+        	Integer p2 = item.getInt("PlayerTwo");
+        	
+        	if(topPlayers.contains(p1)&&topPlayers.contains(p2)){
+        		topGames.add(item);
+        	}
+        }
+		System.out.println(topGames.size());
+        */
     	
 
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -56,47 +179,62 @@ public class App {
 
         DynamoDB dynamoDB = new DynamoDB(client);
 
-        //Table matchTable = dynamoDB.getTable("Matches");
-        //Table deckTable = dynamoDB.getTable("Decklists");
         Table archetypeTable = dynamoDB.getTable("Archetypes");
-        ItemCollection<ScanOutcome> result;
-        
-       
-    	
-    	/*for(JsonNode c: CardList.getInstance().getChampions()){
-    		result= deckTable.scan("Champion = :c",
-            		"listAttr, #m",
-            		new NameMap().with("#m", "Match"),
-            		new ValueMap().with(":c", c.path("uuid").asText())
-            		);*/
+        Table matchTable = dynamoDB.getTable("Matches");
 
-		result= archetypeTable.scan("Version = :v",
-        		null,
-        		new ValueMap().with(":v", 0)
-        		);
-		
-		ArchetypeGroup topGroup = new ArchetypeGroup(result);
-		System.out.println(topGroup.getTopChamps().get(0).getName());
-		
-		for(Archetype a:topGroup.getTopChamps()){
-			System.out.println(a.getName());
-			Matchup m = new Matchup(a,topGroup.getTopChamps().get(0),dynamoDB);
-			System.out.println(m.getWins());
-			System.out.println(m.getLosses());
-		}
-		
-		/*
-    	Map<String,Archetype> champs = new HashMap<String,Archetype>();
+        ScanSpec aspec = new ScanSpec();
+        ScanSpec mspec = new ScanSpec();
+
+        ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
+        ItemCollection<ScanOutcome> matchItems = matchTable.scan(mspec);
+        
+        ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchItems);
+        
+        for(int i=0;i<5; i++){
+        	for(int j=0;j<i;j++){
+        		Matchup m=group.getMatchup(i, j);
+        		System.out.print(group.getChamp(i).getName());
+        		System.out.print(" vs. ");
+        		System.out.println(group.getChamp(j).getName());
+
+        		System.out.print(m.getWins());
+        		System.out.print(" to ");
+        		System.out.println(m.getLosses());
+        		
+        	}
+        }
+        
+        
+        
     	
-        for(Item o:result){
-        	String champ=o.getString("Champion");
+/*
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        Table archetypeTable = dynamoDB.getTable("Archetypes");
+        
+        
+    	Map<String,Archetype> champs = new HashMap<String,Archetype>();
+
+        ScanSpec spec = new ScanSpec();
+
+        ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(spec);
+
+        Iterator<Item> iterator = archetypeItems.iterator();
+        Item it = null;
+        
+        while (iterator.hasNext()) {
+        	it = iterator.next();
+        	String champ=it.getString("Champion");
         	if(champs.get(champ)==null){
         		Archetype a=new Archetype(champ);
-        		a.addEntry(o);
+        		a.addEntry(it);
         		champs.put(champ,a);
         	}else{
         		Archetype a=champs.get(champ);
-        		a.addEntry(o);
+        		a.addEntry(it);
         		champs.put(champ,a);
         	}
         }
@@ -130,10 +268,11 @@ public class App {
 		
 		
         TableKeysAndAttributes forumTableKeysAndAttributes = new TableKeysAndAttributes("Matches");
-		
+		int i=0;
 		for(String s:topChamps.get(0).getMatches()){
-			if(topChamps.get(1).getMatches().contains(s)){
+			if(i<100 && topChamps.get(1).getMatches().contains(s)){
 				forumTableKeysAndAttributes.addHashOnlyPrimaryKey("TimePlayerKey",s);
+				i++;
 			}
 		}
 		

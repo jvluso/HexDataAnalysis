@@ -12,15 +12,22 @@ import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 public class ArchetypeGroup {
 	
 	private List<Archetype> topChamps;
+	private ItemCollection<ScanOutcome> archetypeResult;
+	private ItemCollection<ScanOutcome> matchResult;
 
-	public ArchetypeGroup(ItemCollection<ScanOutcome> result){
+	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypes, ItemCollection<ScanOutcome> matches){
 		
 		Map<String,Archetype> champs = new HashMap<String,Archetype>();
-    	
-        for(Item o:result){
+
+		archetypeResult = archetypes;
+		matchResult = matches;
+		
+		
+        for(Item o:archetypeResult){
         	String champ=o.getString("Champion");
         	if(champs.get(champ)==null){
         		Archetype a=new Archetype(champ);
+        		System.out.println(o.toJSONPretty());
         		a.addEntry(o);
         		champs.put(champ,a);
         	}else{
@@ -59,9 +66,13 @@ public class ArchetypeGroup {
         }
 	}
 	
+
 	
+	public Matchup getMatchup(int a, int b){
+		return new Matchup(topChamps.get(a), topChamps.get(b), matchResult);
+	}
 	
-	public List<Archetype> getTopChamps(){
-		return topChamps;
+	public Archetype getChamp(int i){
+		return topChamps.get(i);
 	}
 }

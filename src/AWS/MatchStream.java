@@ -26,8 +26,70 @@ public class MatchStream {
 		stream=s;
 	}
 	
+	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable){
+		
+
+    	System.out.println(rootNode.path(0).path("TournamentTime").asText());
+    	if(rootNode.path("TournamentId").asInt()==0){
+	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
 	
-	public void uploadStream(){
+	        try {
+		        matchTable.putItem(new Item()
+		        .withPrimaryKey("TimePlayerKey", rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())
+		        .withString("TournamentTime", rootNode.path("TournamentTime").asText())
+		        .withString("PlayerOne", game.path("PlayerOne").asText())
+		        .withString("PlayerTwo", game.path("PlayerTwo").asText())
+		        .withString("PlayerOneWins", game.path("PlayerOneWins").asText())
+		        .withString("PlayerTwoWins", game.path("PlayerTwoWins").asText())
+		        .withNumber("PlayerOneDeck", game.path("PlayerOneDeck").hashCode())
+		        .withNumber("PlayerTwoDeck", game.path("PlayerTwoDeck").hashCode())
+		        ,"attribute_not_exists(TournamentTime)", null, null);
+	        } catch (ConditionalCheckFailedException e){}
+	        Item p1 = new Item()
+	        	.withPrimaryKey("HashCode", game.path("PlayerOneDeck").hashCode())
+	        	.withString("Champion", game.path("PlayerOneDeck").path("Champion").asText())
+	        	.withJSON("Deck", game.path("PlayerOneDeck").path("Deck").toString())
+	        	.withJSON("Sideboard", game.path("PlayerOneDeck").path("Sideboard").toString());
+	        Item p2 = new Item()
+	        	.withPrimaryKey("HashCode", game.path("PlayerTwoDeck").hashCode())
+	        	.withString("Champion", game.path("PlayerTwoDeck").path("Champion").asText())
+	        	.withJSON("Deck", game.path("PlayerTwoDeck").path("Deck").toString())
+	        	.withJSON("Sideboard", game.path("PlayerTwoDeck").path("Sideboard").toString());
+	        
+	        
+	        try {
+		        deckTable.putItem(p1,"attribute_not_exists(Deck)", null, null);
+	        } catch (ConditionalCheckFailedException e){}
+	        try{
+		        deckTable.putItem(p2,"attribute_not_exists(Deck)", null, null);
+	        } catch (ConditionalCheckFailedException e){}
+	
+			Map<String,String> expressionAttributeNames = new HashMap<String,String>();
+			expressionAttributeNames.put("#p", "Match");
+			
+			Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
+			expressionAttributeValues.put(":val",
+	        new HashSet<String>(Arrays.asList(rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())));
+	        
+			
+			deckTable.updateItem("HashCode", game.path("PlayerOneDeck").hashCode(),
+	        "ADD #p :val",
+	        expressionAttributeNames,
+	        expressionAttributeValues);
+	        deckTable.updateItem("HashCode", game.path("PlayerTwoDeck").hashCode(),
+	        "ADD #p :val",
+	        expressionAttributeNames,
+	        expressionAttributeValues);
+	        
+	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
+
+
+    	}
+		
+	}
+	
+
+	public void uploadHexTournamentData() throws JsonParseException, IOException{
 
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
@@ -37,83 +99,45 @@ public class MatchStream {
         Table matchTable = dynamoDB.getTable("Matches");
         Table deckTable = dynamoDB.getTable("Decklists");
         JsonParser parser;
-		try {
-			parser = new JsonFactory()
-			    .createParser(stream);
-			
-			
-			
+		parser = new JsonFactory()
+		    .createParser(stream);
 
-	        
-	        for(JsonNode rootNode = new ObjectMapper().readTree(parser);
-	        		rootNode!=null;
-	        		rootNode = new ObjectMapper().readTree(parser)){
-	        
-	        	
-	        	if(rootNode.path("TournamentId").asInt()==0){
-			        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
-			
-			        try {
-				        matchTable.putItem(new Item()
-				        .withPrimaryKey("TimePlayerKey", rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())
-				        .withString("TournamentTime", rootNode.path("TournamentTime").asText())
-				        .withString("PlayerOne", game.path("PlayerOne").asText())
-				        .withString("PlayerTwo", game.path("PlayerTwo").asText())
-				        .withString("PlayerOneWins", game.path("PlayerOneWins").asText())
-				        .withString("PlayerTwoWins", game.path("PlayerTwoWins").asText())
-				        .withNumber("PlayerOneDeck", game.path("PlayerOneDeck").hashCode())
-				        .withNumber("PlayerTwoDeck", game.path("PlayerTwoDeck").hashCode())
-				        ,"attribute_not_exists(TournamentTime)", null, null);
-			        } catch (ConditionalCheckFailedException e){}
-			        try {
-				        deckTable.putItem(new Item()
-				        .withPrimaryKey("HashCode", game.path("PlayerOneDeck").hashCode())
-				        .withString("Champion", game.path("PlayerOneDeck").path("Champion").asText())
-				        .withJSON("Deck", game.path("PlayerOneDeck").path("Deck").toString())
-				        .withJSON("Sideboard", game.path("PlayerOneDeck").path("Sideboard").toString())
-				        ,"attribute_not_exists(Deck)", null, null);
-			        } catch (ConditionalCheckFailedException e){}
-			        try{
-				        deckTable.putItem(new Item()
-				        .withPrimaryKey("HashCode", game.path("PlayerTwoDeck").hashCode())
-				        .withString("Champion", game.path("PlayerTwoDeck").path("Champion").asText())
-				        .withJSON("Deck", game.path("PlayerTwoDeck").path("Deck").toString())
-				        .withJSON("Sideboard", game.path("PlayerTwoDeck").path("Sideboard").toString())
-				        ,"attribute_not_exists(Deck)", null, null);
-			        } catch (ConditionalCheckFailedException e){}
-			
-					Map<String,String> expressionAttributeNames = new HashMap<String,String>();
-					expressionAttributeNames.put("#p", "Match");
-					
-					Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
-					expressionAttributeValues.put(":val",
-			        new HashSet<String>(Arrays.asList(rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())));
-			        
-					
-					deckTable.updateItem("HashCode", game.path("PlayerOneDeck").hashCode(),
-			        "ADD #p :val",
-			        expressionAttributeNames,
-			        expressionAttributeValues);
-			        deckTable.updateItem("HashCode", game.path("PlayerTwoDeck").hashCode(),
-			        "ADD #p :val",
-			        expressionAttributeNames,
-			        expressionAttributeValues);
-			        
-			        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
+        
+        JsonNode rootNode = new ObjectMapper().readTree(parser);
+        for(JsonNode node: rootNode){
+            uploadNode(node, matchTable, deckTable);
+        	
+        }
+        
+	}
+	
+	
+	
+	public void uploadStream() throws JsonParseException, IOException{
 
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
 
-	        	}
-	        }
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        Table matchTable = dynamoDB.getTable("Matches");
+        Table deckTable = dynamoDB.getTable("Decklists");
+        JsonParser parser;
+		parser = new JsonFactory()
+		    .createParser(stream);
+		
+		
+		
+
+        
+        for(JsonNode rootNode = new ObjectMapper().readTree(parser);
+        		rootNode!=null;
+        		rootNode = new ObjectMapper().readTree(parser)){
+        
+        	uploadNode(rootNode, matchTable, deckTable);
+        }
 	        
 	        
-	        parser.close();
-		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 
 	}
         
