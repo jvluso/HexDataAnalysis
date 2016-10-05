@@ -28,7 +28,6 @@ public class ArchetypeGroup {
         	String champ=o.getString("Champion");
         	if(champs.get(champ)==null){
         		Archetype a=new Archetype(champ);
-        		System.out.println(o.toJSONPretty());
         		a.addEntry(o);
         		champs.put(champ,a);
         	}else{

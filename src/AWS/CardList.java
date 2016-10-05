@@ -2,7 +2,7 @@ package AWS;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,57 +23,82 @@ public class CardList {
 	      }
 	      return instance;
 	   }
-		
-	   static String[] Sets = {"ShardsOfFate",
-				               "ShatteredDestiny",
-				               "ArmiesOfMyth",
-				               "PrimalDawn",
-				               "Herofall"};
+	   
+	   
+		static String[] Sets = {"ShardsOfFate.json",
+            "ShatteredDestiny.json",
+            "ArmiesOfMyth.json",
+            "PrimalDawn.json",
+            "Herofall.json"};
+
+
 	   static String[] SetNames = {"Shards of Fate",
                                    "Shattered Destiny",
                                    "Armies of Myth",
                                    "Primal Dawn",
                					   "Herofall"};
 		
-	   private List<JsonNode> cardList;
-	   public List<JsonNode> getCardList(){
+	   
+
+	   private Hashtable<String,JsonNode> cardNameHash;
+	   private Hashtable<String,JsonNode> cardIdHash;
+	   public Hashtable<String,JsonNode> getCardIdHash() throws JsonParseException, IOException{
 
 		   
-		   if(cardList != null){
-			   return cardList;
+		   if(cardIdHash != null){
+			   return cardIdHash;
 		   }
-		   List<JsonNode> cardListBuilder = new LinkedList<JsonNode>();
-	    	
+		   cardIdHash = new Hashtable<String,JsonNode>(5*1024);
+		   cardNameHash = new Hashtable<String,JsonNode>(5*1024);
+
 		   for(String s:Sets){
 
-				JsonParser parser;
-				try {
-					parser = new JsonFactory()
-					    .createParser(new File("/home/jeremy/hexSets/" + s + ".json"));
-					JsonNode rootNode = new ObjectMapper().readTree(parser);
+			   JsonParser parser = new JsonFactory()
+			   .createParser(new File("src/AWS/hexSets/" + s));
+			   
+			   JsonNode rootNode = new ObjectMapper().readTree(parser);
 
-			        JsonNode cards = rootNode.path("cards");
-			        for(int i=0;!cards.path(i).isMissingNode();i++){
-			        	if(Arrays.asList(SetNames).contains(cards.path(i).path("set_id").asText())){
-			        		cardListBuilder.add(cards.path(i));
-			        	}
-			        }
-			        parser.close();
-				} catch (JsonParseException e) {
-					e.printStackTrace();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
+			   JsonNode cards = rootNode.path("cards");
+			   for(int i=0;!cards.path(i).isMissingNode();i++){
+				   cardIdHash.put(cards.path(i).path("uuid").textValue(), cards.path(i));
+				   cardNameHash.put(cards.path(i).path("name").textValue(), cards.path(i));
+			   }
+			   parser.close();
 			        
-	    	}
-		   cardList=cardListBuilder;
-		   return cardList;
+		   }
+	        
+		   return cardIdHash;
 	   }
 	   
-	   
+	   public Hashtable<String,JsonNode> getCardNameHash() throws JsonParseException, IOException{
+
+		   
+		   if(cardNameHash != null){
+			   return cardNameHash;
+		   }
+		   cardIdHash = new Hashtable<String,JsonNode>(5*1024);
+		   cardNameHash = new Hashtable<String,JsonNode>(5*1024);
+
+		   for(String s:Sets){
+
+			   JsonParser parser = new JsonFactory()
+			   .createParser(new File("src/AWS/hexSets/" + s));
+			   JsonNode rootNode = new ObjectMapper().readTree(parser);
+
+			   JsonNode cards = rootNode.path("cards");
+			   for(int i=0;!cards.path(i).isMissingNode();i++){
+				   cardIdHash.put(cards.path(i).path("uuid").textValue(), cards.path(i));
+				   cardNameHash.put(cards.path(i).path("name").textValue(), cards.path(i));
+			   }
+			   parser.close();
+			        
+		   }
+	        
+		   return cardNameHash;
+	   }
 
 	   private List<JsonNode> champions;
-	   public List<JsonNode> getChampions(){
+	   public List<JsonNode> getChampions() throws JsonParseException, IOException{
 
 		   
 		   if(champions != null){
@@ -82,7 +107,7 @@ public class CardList {
 		   List<JsonNode> championsBuilder = new LinkedList<JsonNode>();
 		   
 		   
-		   for(JsonNode c: getCardList()){
+		   for(JsonNode c: getCardIdHash().values()){
 			   if(c.path("rarity").asText().equals("Champion")){
 				   championsBuilder.add(c);
 			   }

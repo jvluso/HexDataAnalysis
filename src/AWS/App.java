@@ -2,41 +2,15 @@ package AWS;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.document.BatchGetItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.TableKeysAndAttributes;
-import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
-import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
-import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 public class App {
 	
-	static String[] Sets = {"ShardsOfFate.json",
-			                "ShatteredDestiny.json",
-			                "ArmiesOfMyth.json",
-			                "PrimalDawn.json",
-			                "Herofall.json"};
-    	
-
     public static void main(String[] args) throws Exception {
     	
 
@@ -50,26 +24,9 @@ public class App {
     */
 
     	
-
-    	Hashtable<String,JsonNode> cardHash = new Hashtable<String,JsonNode>(5*1024);
-    	
-    	for(String s:Sets){
-
-			JsonParser parser = new JsonFactory()
-			    .createParser(new File("src/AWS/hexSets/" + s));
-			JsonNode rootNode = new ObjectMapper().readTree(parser);
-
-	        JsonNode cards = rootNode.path("cards");
-	        for(int i=0;!cards.path(i).isMissingNode();i++){
-	        	cardHash.put(cards.path(i).path("uuid").toString(), cards.path(i));
-	        }
-	        parser.close();
-		        
-    	}
-        
     	
     	
-/*
+
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -77,22 +34,20 @@ public class App {
 
         //Table matchTable = dynamoDB.getTable("Matches");
         Table deckTable = dynamoDB.getTable("Decklists");
-        Table archetypeTable = dynamoDB.getTable("Archetypes");
+        Table archetypeTable = dynamoDB.getTable("Archetype");
 
         ScanSpec spec = new ScanSpec();
 
         ItemCollection<ScanOutcome> items = deckTable.scan(spec);
 
-        Iterator<Item> iterator = items.iterator();
-        Item item = null;
         int i=0;
-        while (iterator.hasNext()) {
-        	item = iterator.next();
+        for(Item item: items) {
         	i++;
         	ArchetypeStream.addItem(item, archetypeTable);
+            System.out.println("item");
             System.out.println(i);
         }
-		*/
+		
     	
 /*
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -180,6 +135,7 @@ public class App {
         */
     	
 
+    	/*
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -193,13 +149,12 @@ public class App {
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
-        
-        for(int i=0;i<10; i++){
+        for(int i=10;i<20; i++){
         	for(int j=0;j<i;j++){
         		Matchup m=group.getMatchup(i, j);
-        		System.out.print(cardHash.get("\"" + group.getChamp(i).getName() + "\"").get("name"));
+        		System.out.print(CardList.getInstance().getCardIdHash().get(group.getChamp(i).getName()).get("name"));
         		System.out.print(" vs. ");
-        		System.out.println(cardHash.get("\"" + group.getChamp(j).getName() + "\"").get("name"));
+        		System.out.println(CardList.getInstance().getCardIdHash().get(group.getChamp(j).getName()).get("name"));
 
         		System.out.print(m.getWins());
         		System.out.print(" to ");
@@ -207,7 +162,9 @@ public class App {
         		
         	}
         }
-        
+        */
+    	System.out.print(CardList.getInstance().getCardIdHash().get("15ce317b-fec9-47e8-abe1-b5eeff65da3d").toString());
+    	
         
         
     	
