@@ -43,8 +43,12 @@ public class ArchetypeGroup {
         topChamps = Arrays.asList(champList);
         
 	}
-	
 
+	public void limitDates(List<String> dates){
+		for(Archetype a: topChamps){
+			a.limitDates(dates);
+		}
+	}
 	
 	public Matchup getMatchup(int a, int b){
 		return new Matchup(topChamps.get(a), topChamps.get(b), matchTable);

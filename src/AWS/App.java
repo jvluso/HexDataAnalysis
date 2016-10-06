@@ -1,5 +1,8 @@
 package AWS;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
@@ -26,7 +29,7 @@ public class App {
     	
     	
     	
-
+/*
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -47,123 +50,66 @@ public class App {
             System.out.println("item");
             System.out.println(i);
         }
-		
+		*/
+   
     	
-/*
+
+    	
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
         DynamoDB dynamoDB = new DynamoDB(client);
 
-        Table matchTable = dynamoDB.getTable("Matches");
-
-        ScanSpec spec = new ScanSpec();
-
-        ItemCollection<ScanOutcome> items = matchTable.scan(spec);
-
-        Iterator<Item> iterator = items.iterator();
-        Item item = null;
-        HashMap<Integer,List<String>> players = new HashMap<Integer,List<String>>();
-        
-        int i=0;
-        while (iterator.hasNext()) {
-        	item = iterator.next();
-        	Integer p1 = item.getInt("PlayerOne");
-        	Integer p2 = item.getInt("PlayerTwo");
-        	String game = item.getString("TournamentTime");
-        	
-        	if(players.containsKey(p1)){
-        		players.get(p1).add(game);
-        	}else{
-        		List<String> list=new LinkedList<String>();
-        		list.add(game);
-        		players.put(p1,list);
-        	}
-
-        	if(players.containsKey(p2)){
-        		players.get(p2).add(game);
-        	}else{
-        		List<String> list=new LinkedList<String>();
-        		list.add(game);
-        		players.put(p2,list);
-        	}
-        	
-        	i++;
-        }
-    	
-
-        List<Integer>topPlayers = new LinkedList<Integer>();
-    	for(Integer o:players.keySet()){
-        	if(players.get(o)!=null){
-	        	if(players.get(o).size() > 50){
-	        		topPlayers.add(o);
-	        	}
-        	}
-    	}
-    	i=0;
-    	for(Integer o:topPlayers){
-    		System.out.println("Player");
-    		System.out.println(o);
-    		System.out.println("Games");
-    		System.out.println(players.get(o).size());
-    		i+=players.get(o).size();
-    	}
-
-		System.out.println("Games");
-		System.out.println(i);
-		System.out.println("Players");
-    	System.out.println(topPlayers.size());
-    	
-    	
-    	
-    	
-
-        iterator = items.iterator();
-        item = null;
-        List<Item> topGames= new LinkedList<Item>();
-        
-        while (iterator.hasNext()) {
-        	item = iterator.next();
-        	Integer p1 = item.getInt("PlayerOne");
-        	Integer p2 = item.getInt("PlayerTwo");
-        	
-        	if(topPlayers.contains(p1)&&topPlayers.contains(p2)){
-        		topGames.add(item);
-        	}
-        }
-		System.out.println(topGames.size());
-        */
-    	
-
-    	/*
-        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
-        client.withRegion(Regions.US_WEST_1);
-
-        DynamoDB dynamoDB = new DynamoDB(client);
-
-        Table archetypeTable = dynamoDB.getTable("Archetypes");
+        Table archetypeTable = dynamoDB.getTable("Archetype");
         Table matchTable = dynamoDB.getTable("Matches");
 
         ScanSpec aspec = new ScanSpec();
 
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
+        List<List<Matchup>> matchups = new ArrayList<List<Matchup>>();
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
-        for(int i=10;i<20; i++){
+        for(int i=0;i<10; i++){
+        	List<Matchup>list = new ArrayList<Matchup>();
         	for(int j=0;j<i;j++){
         		Matchup m=group.getMatchup(i, j);
-        		System.out.print(CardList.getInstance().getCardIdHash().get(group.getChamp(i).getName()).get("name"));
+        		list.add(m);
+        		System.out.print(CardList.getInstance().getCardIdHash().get(group.getChamp(i).getName()).get("name").textValue());
         		System.out.print(" vs. ");
-        		System.out.println(CardList.getInstance().getCardIdHash().get(group.getChamp(j).getName()).get("name"));
+        		System.out.println(CardList.getInstance().getCardIdHash().get(group.getChamp(j).getName()).get("name").textValue());
 
         		System.out.print(m.getWins());
         		System.out.print(" to ");
         		System.out.println(m.getLosses());
         		
         	}
+        	matchups.add(list);
         }
-        */
-    	System.out.print(CardList.getInstance().getCardIdHash().get("15ce317b-fec9-47e8-abe1-b5eeff65da3d").toString());
+        for(int i=0;i<10; i++){
+    		System.out.print(CardList.getInstance().getCardIdHash().get(group.getChamp(i).getName()).get("name").textValue());
+        	System.out.print("\t");
+        }
+    	System.out.print("\n");
+        for(int i=0;i<10; i++){
+    		System.out.print(CardList.getInstance().getCardIdHash().get(group.getChamp(i).getName()).get("name").textValue());
+        	for(int j=0;j<10;j++){
+        		if(j<i){
+        			System.out.print(matchups.get(i).get(j).getWins()/(matchups.get(i).get(j).getWins()+matchups.get(i).get(j).getLosses()));
+        		}
+        		if(i==j){
+        			System.out.print(".5");
+        		}
+        		if(j>i){
+        			System.out.print(matchups.get(j).get(i).getWins()+matchups.get(j).get(i).getLosses());
+            	}
+        		System.out.print("\t");
+        	}
+        	System.out.print("\n");
+        }
+        
+        
+        
+    	System.out.print(CardList.getInstance().getCardIdHash().get("95e3096e-15fa-4bff-a3af-a44df6dc7c2c").toString());
     	
         
         

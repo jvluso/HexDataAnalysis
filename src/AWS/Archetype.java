@@ -1,5 +1,6 @@
 package AWS;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,9 +18,34 @@ public class Archetype implements Comparable<Archetype> {
 		matches = new LinkedList<String>();
 		deckListHashes = new LinkedList<Integer>();
 	}
+
+	public Archetype(Item item){
+		name=item.getString("Name");
+		matches = new LinkedList<String>();
+		deckListHashes = new LinkedList<Integer>();
+		matches.addAll(item.getList("Match"));
+		deckListHashes.addAll(item.getList("Decks"));
+	}
 	
 	public String getName(){
 		return name;
+	}
+	
+	public void limitDates(List<String> dates){
+		for (Iterator<String> iter = matches.listIterator(); iter.hasNext(); ) {
+		    String m = iter.next();
+		    boolean keep=false;
+			for(String d: dates){
+				if(m.contains(d)){
+					keep=true;
+					break;
+				}
+			}
+			if(!keep){
+				iter.remove();
+			}
+		}
+			
 	}
 	
 	public void addEntry(Item item){
