@@ -4,12 +4,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -29,52 +29,40 @@ public class ArchetypeStream {
 		
 		for(Object obj: cardList){
 			if(!(obj instanceof Map)){
-				System.out.println("string?");
 				continue;
 			}
 			Map<String,String> cardMap = (Map<String,String>) obj;
 			if(CardList.getInstance().getCardIdHash().containsKey(cardMap.get("Template"))){
 				JsonNode card = CardList.getInstance().getCardIdHash().get(cardMap.get("Template"));
-				System.out.println(card.get("threshold").textValue());
 				if(!Diamond){
-					System.out.print(".");
 					if(card.get("threshold").textValue().contains("Diamond")){
-						System.out.print(",");
 						Diamond=true;
 					}
 				}
 				if(!Sapphire){
 					System.out.print(".");
 					if(card.get("threshold").textValue().contains("Sapphire")){
-						System.out.print(",");
 						Sapphire=true;
 					}
 				}
 				if(!Blood){
 					System.out.print(".");
 					if(card.get("threshold").textValue().contains("Blood")){
-						System.out.print(",");
 						Blood=true;
 					}
 				}
 				if(!Ruby){
 					System.out.print(".");
 					if(card.get("threshold").textValue().contains("Ruby")){
-						System.out.print(",");
 						Ruby=true;
 					}
 				}
 				if(!Wild){
 					System.out.print(".");
 					if(card.get("threshold").textValue().contains("Wild")){
-						System.out.print(",");
 						Wild=true;
 					}
 				}
-				System.out.println(";");
-			}else{
-				System.out.print("no match for ");
-				System.out.println(cardMap.get("Template"));
 			}
 		}
 		
@@ -110,16 +98,10 @@ public class ArchetypeStream {
 		
 		
 		
-
-		Map<String,Object> versionAttributeValues = new HashMap<String,Object>();
-		versionAttributeValues.put(":ver",
-				new HashSet<String>(Arrays.asList("0")));
-
-		Map<String,String> versionAttributeNames = new HashMap<String,String>();
-		versionAttributeNames.put("#p", "Version");
 		
-		t.putItem(newItem.withInt("Version", 0),"#p <> :ver",versionAttributeNames,versionAttributeValues);
-		
+		try{
+			t.putItem(newItem,"attribute_not_exists(Decks)",null,null);
+		}catch (ConditionalCheckFailedException e){}
 
 		Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
 		expressionAttributeValues.put(":m",i.get("Match"));
