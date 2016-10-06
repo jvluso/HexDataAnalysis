@@ -47,7 +47,6 @@ public class App {
         for(Item item: items) {
         	i++;
         	ArchetypeStream.addItem(item, archetypeTable);
-            System.out.println("item");
             System.out.println(i);
         }
 		*/
