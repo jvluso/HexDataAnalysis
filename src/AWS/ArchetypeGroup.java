@@ -12,20 +12,24 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 
 public class ArchetypeGroup {
 	
-	private List<Archetype> topChamps;
+	private List<Archetype> archetypes;
 	private ItemCollection<ScanOutcome> archetypeResult;
 	private Table matchTable;
 
 	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypes, Table match){
 		
-		Map<String,Archetype> champs = new HashMap<String,Archetype>();
-
 		archetypeResult = archetypes;
 		matchTable = match;
 		
-		
+		init();
+	}
+	
+	private void init(){
+
+		Map<String,Archetype> champs = new HashMap<String,Archetype>();
+
         for(Item o:archetypeResult){
-        	String champ=o.getString("Champion");
+        	String champ=o.getString("Name");
         	if(champs.get(champ)==null){
         		Archetype a=new Archetype(champ);
         		a.addEntry(o);
@@ -40,21 +44,16 @@ public class ArchetypeGroup {
 
         Archetype[] champList = champs.values().toArray(new Archetype[0]);
         Arrays.sort(champList);
-        topChamps = Arrays.asList(champList);
+        archetypes = Arrays.asList(champList);
         
 	}
 
-	public void limitDates(List<String> dates){
-		for(Archetype a: topChamps){
-			a.limitDates(dates);
-		}
-	}
 	
 	public Matchup getMatchup(int a, int b){
-		return new Matchup(topChamps.get(a), topChamps.get(b), matchTable);
+		return new Matchup(archetypes.get(a), archetypes.get(b), matchTable);
 	}
 	
 	public Archetype getChamp(int i){
-		return topChamps.get(i);
+		return archetypes.get(i);
 	}
 }

@@ -31,26 +31,10 @@ public class Archetype implements Comparable<Archetype> {
 		return name;
 	}
 	
-	public void limitDates(List<String> dates){
-		for (Iterator<String> iter = matches.listIterator(); iter.hasNext(); ) {
-		    String m = iter.next();
-		    boolean keep=false;
-			for(String d: dates){
-				if(m.contains(d)){
-					keep=true;
-					break;
-				}
-			}
-			if(!keep){
-				iter.remove();
-			}
-		}
-			
-	}
 	
 	public void addEntry(Item item){
 		matches.addAll(item.getList("Match"));
-		deckListHashes.add(item.getInt("HashCode"));
+		deckListHashes.addAll(item.getList("Decks"));
 	}
 	
 	public void addArchetype(Archetype a){

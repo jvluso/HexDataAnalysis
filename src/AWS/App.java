@@ -29,7 +29,7 @@ public class App {
     	
     	
     	
-/*
+
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -49,11 +49,13 @@ public class App {
         	ArchetypeStream.addItem(item, archetypeTable);
             System.out.println(i);
         }
-		*/
+		
    
-    	
+    	for(String date:RecentDates.getInstance().getDateList()){
+    		System.out.println(date);
+    	}
 
-    	
+    	/*
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -110,7 +112,7 @@ public class App {
         
     	System.out.print(CardList.getInstance().getCardIdHash().get("95e3096e-15fa-4bff-a3af-a44df6dc7c2c").toString());
     	
-        
+        */
         
     	
 /*
