@@ -87,6 +87,7 @@ public class ArchetypeStream {
 		String date = "";
 		
 		for(Object m:i.getList("Match")){
+			
 			String match=(String)m;
 			date = match.substring(0,10);
 		

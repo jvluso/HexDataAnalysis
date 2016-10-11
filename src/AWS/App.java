@@ -1,33 +1,26 @@
 package AWS;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
-import com.amazonaws.services.dynamodbv2.document.DynamoDB;
-import com.amazonaws.services.dynamodbv2.document.Item;
-import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
-import com.amazonaws.services.dynamodbv2.document.Table;
-import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import java.io.InputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.zip.GZIPInputStream;
 
 public class App {
 	
     public static void main(String[] args) throws Exception {
     	
 
-/*
- * 
- * for uploading new days of data
-    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-09-29.gz"));
+
+ 
+    	//for uploading new days of data
+    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hexData/2016-10-03.gz"));
     	InputStream gzipStr = new GZIPInputStream(fileStr);
     	
         new MatchStream(new numFilteredStream(gzipStr)).uploadHexTournamentData();
-    */
+    
 
     	
-    	
+    	/*
     	
 
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();

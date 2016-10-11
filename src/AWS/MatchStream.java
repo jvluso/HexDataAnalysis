@@ -26,16 +26,18 @@ public class MatchStream {
 		stream=s;
 	}
 	
-	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable){
+	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
 		
 
     	System.out.println(rootNode.path(0).path("TournamentTime").asText());
     	if(rootNode.path("TournamentId").asInt()==0){
 	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
+	        
+	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
 	
 	        try {
 		        matchTable.putItem(new Item()
-		        .withPrimaryKey("TimePlayerKey", rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())
+		        .withPrimaryKey("TimePlayerKey", matchKey)
 		        .withString("TournamentTime", rootNode.path("TournamentTime").asText())
 		        .withString("PlayerOne", game.path("PlayerOne").asText())
 		        .withString("PlayerTwo", game.path("PlayerTwo").asText())
@@ -69,7 +71,7 @@ public class MatchStream {
 			
 			Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
 			expressionAttributeValues.put(":val",
-	        new HashSet<String>(Arrays.asList(rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText())));
+	        new HashSet<String>(Arrays.asList(matchKey)));
 	        
 			
 			deckTable.updateItem("HashCode", game.path("PlayerOneDeck").hashCode(),
@@ -80,6 +82,9 @@ public class MatchStream {
 	        "ADD #p :val",
 	        expressionAttributeNames,
 	        expressionAttributeValues);
+	        
+	        ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
+	        
 	        
 	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
 
@@ -98,6 +103,7 @@ public class MatchStream {
 
         Table matchTable = dynamoDB.getTable("Matches");
         Table deckTable = dynamoDB.getTable("Decklists");
+        Table archetypeTable = dynamoDB.getTable("Archetype");
         JsonParser parser;
 		parser = new JsonFactory()
 		    .createParser(stream);
@@ -105,7 +111,7 @@ public class MatchStream {
         
         JsonNode rootNode = new ObjectMapper().readTree(parser);
         for(JsonNode node: rootNode){
-            uploadNode(node, matchTable, deckTable);
+            uploadNode(node, matchTable, deckTable, archetypeTable);
         	
         }
         
@@ -122,6 +128,7 @@ public class MatchStream {
 
         Table matchTable = dynamoDB.getTable("Matches");
         Table deckTable = dynamoDB.getTable("Decklists");
+        Table archetypeTable = dynamoDB.getTable("Archetype");
         JsonParser parser;
 		parser = new JsonFactory()
 		    .createParser(stream);
@@ -134,7 +141,7 @@ public class MatchStream {
         		rootNode!=null;
         		rootNode = new ObjectMapper().readTree(parser)){
         
-        	uploadNode(rootNode, matchTable, deckTable);
+        	uploadNode(rootNode, matchTable, deckTable, archetypeTable);
         }
 	        
 	        
