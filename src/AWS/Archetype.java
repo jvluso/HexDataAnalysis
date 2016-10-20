@@ -24,7 +24,9 @@ public class Archetype implements Comparable<Archetype> {
 		matches = new LinkedList<String>();
 		deckListHashes = new LinkedList<Integer>();
 		matches.addAll(item.getList("Match"));
-		deckListHashes.addAll(item.getList("Decks"));
+		for(Object o:item.getList("Decks")){
+			deckListHashes.add(Integer.parseInt((String) o));
+		}
 	}
 	
 	public String getName(){
@@ -34,7 +36,9 @@ public class Archetype implements Comparable<Archetype> {
 	
 	public void addEntry(Item item){
 		matches.addAll(item.getList("Match"));
-		deckListHashes.addAll(item.getList("Decks"));
+		for(Object o:item.getList("Decks")){
+			deckListHashes.add(Integer.parseInt((String) o));
+		}
 	}
 	
 	public void addArchetype(Archetype a){

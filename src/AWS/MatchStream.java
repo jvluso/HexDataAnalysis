@@ -84,6 +84,7 @@ public class MatchStream {
 	        expressionAttributeValues);
 	        
 	        ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
+	        ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), archetypeTable);
 	        
 	        
 	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());

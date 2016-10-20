@@ -108,7 +108,7 @@ public class ArchetypeStream {
 			
 			
 			try{
-				t.putItem(newItem,"attribute_not_exists(Decks)",null,null);
+				t.putItem(newItem,"attribute_not_exists(Ruby)",null,null);
 			}catch (ConditionalCheckFailedException e){}
 	
 			

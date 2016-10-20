@@ -43,7 +43,7 @@ public class RecentDates {
 	    	rightNow.add(Calendar.DATE, -1);
 	    }
 		
-		
+		System.out.println(list);
 		dateList=list;
 		return list;
 	}
