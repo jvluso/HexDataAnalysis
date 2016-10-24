@@ -4,8 +4,6 @@ import java.io.InputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 
@@ -25,13 +23,13 @@ public class App {
     	
 
 
- /*
+ 
     	//for uploading new days of data
     	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-10-18.gz"));
     	InputStream gzipStr = new GZIPInputStream(fileStr);
     	
-        new MatchStream(new numFilteredStream(gzipStr)).uploadHexTournamentData();
-    */
+        new MatchStream().uploadHexTournamentData(new numFilteredStream(gzipStr));
+    
 
     	
    

@@ -1,13 +1,8 @@
 package AWS;
 
-import java.io.IOException;
 import java.util.Calendar;
-import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public class RecentDates {
 	private static RecentDates instance = null;

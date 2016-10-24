@@ -21,9 +21,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MatchStream {
 
-	InputStream stream;
-	public MatchStream(InputStream s) {
-		stream=s;
+	
+	Table matchTable;
+	Table deckTable;
+	Table archetypeTable;
+	public MatchStream() throws JsonParseException, IOException {
+		
+
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        matchTable = dynamoDB.getTable("Matches");
+        deckTable = dynamoDB.getTable("Decklists");
+        archetypeTable = dynamoDB.getTable("Archetype");
+		
+		
+		
+
 	}
 	
 	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
@@ -95,7 +111,7 @@ public class MatchStream {
 	}
 	
 
-	public void uploadHexTournamentData() throws JsonParseException, IOException{
+	public void uploadHexTournamentData(InputStream stream) throws JsonParseException, IOException{
 
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
@@ -120,23 +136,11 @@ public class MatchStream {
 	
 	
 	
-	public void uploadStream() throws JsonParseException, IOException{
+	public void uploadStream(InputStream stream) throws JsonParseException, IOException{
 
-        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
-        client.withRegion(Regions.US_WEST_1);
-
-        DynamoDB dynamoDB = new DynamoDB(client);
-
-        Table matchTable = dynamoDB.getTable("Matches");
-        Table deckTable = dynamoDB.getTable("Decklists");
-        Table archetypeTable = dynamoDB.getTable("Archetype");
         JsonParser parser;
 		parser = new JsonFactory()
 		    .createParser(stream);
-		
-		
-		
-
         
         for(JsonNode rootNode = new ObjectMapper().readTree(parser);
         		rootNode!=null;

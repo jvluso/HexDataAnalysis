@@ -7,7 +7,6 @@ import java.util.Map;
 
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
-import com.amazonaws.services.dynamodbv2.document.QueryOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 
