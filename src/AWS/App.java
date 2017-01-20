@@ -10,12 +10,17 @@ import java.util.zip.GZIPInputStream;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.utils.NameMap;
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class App {
 	
@@ -23,15 +28,51 @@ public class App {
     	
 
 
- 
+ /*
     	//for uploading new days of data
-    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-10-18.gz"));
+    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-10-26.gz"));
     	InputStream gzipStr = new GZIPInputStream(fileStr);
     	
         new MatchStream().uploadHexTournamentData(new numFilteredStream(gzipStr));
-    
+    */
 
-    	
+/*
+        AmazonDynamoDBClient client;
+        DynamoDB dynamoDB;
+    	Table cardTable;
+        client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        dynamoDB = new DynamoDB(client);
+
+        cardTable = dynamoDB.getTable("Cards");
+		
+	    JsonParser parser = new JsonFactory()
+	    .createParser(new File("src/AWS/hexSets/Herofall.json"));
+	   
+	    JsonNode rootNode = new ObjectMapper().readTree(parser);
+	    JsonNode cards = rootNode.path("cards");
+	    for(int i=0;!cards.path(i).isMissingNode();i++){
+
+	        cardTable.putItem(new Item()
+	        .withPrimaryKey("Set", getCardAttribute(cards.path(i),"set_id"),
+	        		        "uuid", getCardAttribute(cards.path(i),"uuid"))
+	        .withString("name", getCardAttribute(cards.path(i),"name"))
+	        .withString("cost", getCardAttribute(cards.path(i),"cost"))
+	        .withString("threshold", getCardAttribute(cards.path(i),"threshold"))
+	        .withString("type", getCardAttribute(cards.path(i),"type"))
+	        .withString("subtype", getCardAttribute(cards.path(i),"subtype"))
+	        .withString("restriction", getCardAttribute(cards.path(i),"restriction"))
+	        .withString("rarity", getCardAttribute(cards.path(i),"rarity"))
+	        .withString("text", getCardAttribute(cards.path(i),"text"))
+	        .withString("flavor", getCardAttribute(cards.path(i),"flavor"))
+	        .withString("atk", getCardAttribute(cards.path(i),"atk"))
+	        ,"attribute_not_exists(TournamentTime)", null, null);
+	    }
+	    parser.close();
+	    
+	    
+	    */
    
     	
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -69,6 +110,11 @@ public class App {
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
         for(int i=0;i<size; i++){
+    		System.out.print(group.getChamp(i).getName());
+    		System.out.print(" : ");
+    		System.out.println(group.getChamp(i).getMatches().size());
+        }
+        for(int i=0;i<size; i++){
         	List<Matchup>list = new ArrayList<Matchup>();
         	for(int j=0;j<i;j++){
         		Matchup m=group.getMatchup(i, j);
@@ -84,6 +130,7 @@ public class App {
         	}
         	matchups.add(list);
         }
+    	System.out.print(".\t");
         for(int i=0;i<size; i++){
     		System.out.print(group.getChamp(i).getName());
         	System.out.print("\t");
@@ -97,7 +144,7 @@ public class App {
         			if(matchups.get(i).get(j).getWins()+matchups.get(i).get(j).getLosses() == 0){
         				System.out.print("5000");
         			}else{
-        				System.out.print(10000*(long)matchups.get(i).get(j).getWins()/(long)(matchups.get(i).get(j).getWins()+matchups.get(i).get(j).getLosses()));
+        				System.out.print(10000*(long)(10+matchups.get(i).get(j).getWins())/(long)(20+(matchups.get(i).get(j).getWins()+matchups.get(i).get(j).getLosses())));
         		
         			}
         		}
@@ -111,8 +158,18 @@ public class App {
         	}
         	System.out.print("\n");
         }
-        
+      
     }
     
     
+    public static String getCardAttribute(JsonNode node,String att){
+    	
+    	if(node.path(att).textValue().isEmpty()){
+    		return " ";
+    	}else{
+    		return node.path(att).textValue();
+    	}
+    
+    	
+    }
 }

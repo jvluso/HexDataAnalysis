@@ -6,6 +6,13 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
 
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
+import com.amazonaws.services.dynamodbv2.document.DynamoDB;
+import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
+import com.amazonaws.services.dynamodbv2.document.Table;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -48,6 +55,12 @@ public class CardList {
 		   if(cardIdHash != null){
 			   return cardIdHash;
 		   }
+		   
+		   if(!new File("src/AWS/hexSets/ShardsOfFate.json").exists()){
+			   setNameHashesFromDynamoDB();
+			   return cardIdHash;
+		   }
+		   
 		   cardIdHash = new Hashtable<String,JsonNode>(5*1024);
 		   cardNameHash = new Hashtable<String,JsonNode>(5*1024);
 
@@ -76,6 +89,12 @@ public class CardList {
 		   if(cardNameHash != null){
 			   return cardNameHash;
 		   }
+
+		   if(!new File("src/AWS/hexSets/ShardsOfFate.json").exists()){
+			   setNameHashesFromDynamoDB();
+			   return cardIdHash;
+		   }
+		   
 		   cardIdHash = new Hashtable<String,JsonNode>(5*1024);
 		   cardNameHash = new Hashtable<String,JsonNode>(5*1024);
 
@@ -95,6 +114,38 @@ public class CardList {
 		   }
 	        
 		   return cardNameHash;
+	   }
+	   
+	   
+	   private void setNameHashesFromDynamoDB() throws JsonParseException, IOException{
+
+		   cardIdHash = new Hashtable<String,JsonNode>(5*1024);
+		   cardNameHash = new Hashtable<String,JsonNode>(5*1024);
+
+	       AmazonDynamoDBClient client;
+	       DynamoDB dynamoDB;
+	       Table cardTable;
+	       client = new AmazonDynamoDBClient();
+	       client.withRegion(Regions.US_WEST_1);
+
+	       dynamoDB = new DynamoDB(client);
+
+	       cardTable = dynamoDB.getTable("Cards");
+	       
+
+	        ItemCollection<ScanOutcome> cardItems = cardTable.scan();
+		   
+	        
+	        for(Item i : cardItems){
+
+			   JsonParser parser = new JsonFactory()
+			   .createParser(i.toJSON());
+			   JsonNode rootNode = new ObjectMapper().readTree(parser);
+
+			   cardIdHash.put(rootNode.path("uuid").textValue(), rootNode);
+			   cardNameHash.put(rootNode.path("name").textValue(), rootNode);
+	        }
+		   
 	   }
 
 	   private List<JsonNode> champions;

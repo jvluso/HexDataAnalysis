@@ -21,17 +21,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class MatchStream {
 
-	
+    AmazonDynamoDBClient client;
+    DynamoDB dynamoDB;
 	Table matchTable;
 	Table deckTable;
 	Table archetypeTable;
 	public MatchStream() throws JsonParseException, IOException {
 		
 
-        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
-        DynamoDB dynamoDB = new DynamoDB(client);
+        dynamoDB = new DynamoDB(client);
 
         matchTable = dynamoDB.getTable("Matches");
         deckTable = dynamoDB.getTable("Decklists");
@@ -45,8 +46,9 @@ public class MatchStream {
 	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
 		
 
-    	System.out.println(rootNode.path(0).path("TournamentTime").asText());
-    	if(rootNode.path("TournamentId").asInt()==0){
+    	System.out.print("TournamentTime: ");
+    	System.out.println(rootNode.path("TournamentTime").asText());
+    	if(rootNode.has("TournamentType") && rootNode.path("TournamentType").asText().equals("Ladder")){
 	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
 	        
 	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
@@ -113,25 +115,22 @@ public class MatchStream {
 
 	public void uploadHexTournamentData(InputStream stream) throws JsonParseException, IOException{
 
-        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
-        client.withRegion(Regions.US_WEST_1);
 
-        DynamoDB dynamoDB = new DynamoDB(client);
-
-        Table matchTable = dynamoDB.getTable("Matches");
-        Table deckTable = dynamoDB.getTable("Decklists");
-        Table archetypeTable = dynamoDB.getTable("Archetype");
         JsonParser parser;
 		parser = new JsonFactory()
 		    .createParser(stream);
 
         
         JsonNode rootNode = new ObjectMapper().readTree(parser);
-        for(JsonNode node: rootNode){
-            uploadNode(node, matchTable, deckTable, archetypeTable);
-        	
+        if(rootNode.has("TournamentId")){
+            uploadNode(rootNode, matchTable, deckTable, archetypeTable);
+        }else{
+	        for(JsonNode node: rootNode){
+	            uploadNode(node, matchTable, deckTable, archetypeTable);
+	        	
+	        }
         }
-        
+        parser.close();
 	}
 	
 	
@@ -146,11 +145,20 @@ public class MatchStream {
         		rootNode!=null;
         		rootNode = new ObjectMapper().readTree(parser)){
         
+        	System.out.println(rootNode);
         	uploadNode(rootNode, matchTable, deckTable, archetypeTable);
         }
-	        
-	        
 
+        parser.close();
 	}
         
+
+	
+	
+	public void uploadJSON(JsonNode node) throws JsonParseException, IOException{
+
+    	System.out.println(node);
+    	uploadNode(node, matchTable, deckTable, archetypeTable);
+
+	}
 }
