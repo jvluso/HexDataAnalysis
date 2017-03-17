@@ -36,14 +36,16 @@ public class CardList {
             "ShatteredDestiny.json",
             "ArmiesOfMyth.json",
             "PrimalDawn.json",
-            "Herofall.json"};
+            "Herofall.json",
+            "ScarsOfWar.json"};
 
 
 	   static String[] SetNames = {"Shards of Fate",
                                    "Shattered Destiny",
                                    "Armies of Myth",
                                    "Primal Dawn",
-               					   "Herofall"};
+               					   "Herofall",
+               					   "Scars of War"};
 		
 	   
 

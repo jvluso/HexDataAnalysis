@@ -1,7 +1,12 @@
 package AWS;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -89,7 +94,19 @@ public class ArchetypeStream {
 		for(Object m:i.getList("Match")){
 			
 			String match=(String)m;
-			date = match.substring(0,10);
+			
+			DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT,DateFormat.DEFAULT);
+			SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+			date = match.substring(0,match.indexOf('M')+1);
+		
+			
+			try {
+				Date day;
+				day = df.parse(date);
+				date = sdf.format(day);
+			} catch (ParseException e1) {
+				e1.printStackTrace();
+			}
 		
 		
 		

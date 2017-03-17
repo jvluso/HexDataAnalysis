@@ -111,7 +111,47 @@ public class MatchStream {
     	}
 		
 	}
+
+	private void uploadArchetype(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
+		
+
+    	System.out.print("TournamentTime: ");
+    	System.out.println(rootNode.path("TournamentTime").asText());
+    	if(rootNode.has("TournamentType") && rootNode.path("TournamentType").asText().equals("Ladder")){
+	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
+	        
+	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
 	
+	        Item p1 = new Item()
+	        	.withPrimaryKey("HashCode", game.path("PlayerOneDeck").hashCode())
+	        	.withString("Champion", game.path("PlayerOneDeck").path("Champion").asText())
+	        	.withJSON("Deck", game.path("PlayerOneDeck").path("Deck").toString())
+	        	.withJSON("Sideboard", game.path("PlayerOneDeck").path("Sideboard").toString());
+	        Item p2 = new Item()
+	        	.withPrimaryKey("HashCode", game.path("PlayerTwoDeck").hashCode())
+	        	.withString("Champion", game.path("PlayerTwoDeck").path("Champion").asText())
+	        	.withJSON("Deck", game.path("PlayerTwoDeck").path("Deck").toString())
+	        	.withJSON("Sideboard", game.path("PlayerTwoDeck").path("Sideboard").toString());
+	        
+	        
+	
+			Map<String,String> expressionAttributeNames = new HashMap<String,String>();
+			expressionAttributeNames.put("#p", "Match");
+			
+			Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
+			expressionAttributeValues.put(":val",
+	        new HashSet<String>(Arrays.asList(matchKey)));
+	        
+	        ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
+	        ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), archetypeTable);
+	        
+	        
+	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
+
+
+    	}
+		
+	}
 
 	public void uploadHexTournamentData(InputStream stream) throws JsonParseException, IOException{
 
@@ -135,20 +175,22 @@ public class MatchStream {
 	
 	
 	
-	public void uploadStream(InputStream stream) throws JsonParseException, IOException{
+	public void uploadArchetypeUpdate(InputStream stream) throws JsonParseException, IOException{
 
         JsonParser parser;
 		parser = new JsonFactory()
 		    .createParser(stream);
-        
-        for(JsonNode rootNode = new ObjectMapper().readTree(parser);
-        		rootNode!=null;
-        		rootNode = new ObjectMapper().readTree(parser)){
-        
-        	System.out.println(rootNode);
-        	uploadNode(rootNode, matchTable, deckTable, archetypeTable);
-        }
 
+        
+        JsonNode rootNode = new ObjectMapper().readTree(parser);
+        if(rootNode.has("TournamentId")){
+            uploadArchetype(rootNode, matchTable, deckTable, archetypeTable);
+        }else{
+	        for(JsonNode node: rootNode){
+	            uploadArchetype(node, matchTable, deckTable, archetypeTable);
+	        	
+	        }
+        }
         parser.close();
 	}
         

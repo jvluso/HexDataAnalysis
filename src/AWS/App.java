@@ -27,16 +27,17 @@ public class App {
     public static void main(String[] args) throws Exception {
     	
 
-
- /*
+/*
+ 
     	//for uploading new days of data
-    	InputStream fileStr = new FileInputStream(new File("/home/jeremy/hex/2016-10-26.gz"));
+    	InputStream fileStr = new FileInputStream(new File("/media/sf_UbuntuVM3Share/2017-03-06.gz"));
     	InputStream gzipStr = new GZIPInputStream(fileStr);
     	
-        new MatchStream().uploadHexTournamentData(new numFilteredStream(gzipStr));
-    */
+        new MatchStream().uploadArchetypeUpdate(new numFilteredStream(gzipStr));
+    
 
 /*
+ 		//for uploading card sets
         AmazonDynamoDBClient client;
         DynamoDB dynamoDB;
     	Table cardTable;
@@ -48,7 +49,7 @@ public class App {
         cardTable = dynamoDB.getTable("Cards");
 		
 	    JsonParser parser = new JsonFactory()
-	    .createParser(new File("src/AWS/hexSets/Herofall.json"));
+	    .createParser(new File("src/AWS/hexSets/ScarsOfWar.json"));
 	   
 	    JsonNode rootNode = new ObjectMapper().readTree(parser);
 	    JsonNode cards = rootNode.path("cards");
@@ -70,9 +71,9 @@ public class App {
 	        ,"attribute_not_exists(TournamentTime)", null, null);
 	    }
 	    parser.close();
+	*/    
 	    
 	    
-	    */
    
     	
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -109,6 +110,8 @@ public class App {
         int size = 15;
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
+
+        
         for(int i=0;i<size; i++){
     		System.out.print(group.getChamp(i).getName());
     		System.out.print(" : ");
@@ -158,6 +161,11 @@ public class App {
         	}
         	System.out.print("\n");
         }
+        
+/*
+        System.out.println(group.matchupTable(10));
+        */
+        
       
     }
     
