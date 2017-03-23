@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.zip.GZIPInputStream;
 
 import com.amazonaws.regions.Regions;
@@ -27,13 +28,21 @@ public class App {
     public static void main(String[] args) throws Exception {
     	
 
-/*
- 
+
+ /*
     	//for uploading new days of data
-    	InputStream fileStr = new FileInputStream(new File("/media/sf_UbuntuVM3Share/2017-03-06.gz"));
+    	
+    	// use /media/sf_UbuntuVM3Share/2017-03-16.gz
+    	Scanner scanner = new Scanner(System.in);
+    	
+    	System.out.println("filename");
+    	String filename = scanner.nextLine();
+    	System.out.println("collected");
+    	scanner.close();
+    	InputStream fileStr = new FileInputStream(new File(filename));
     	InputStream gzipStr = new GZIPInputStream(fileStr);
     	
-        new MatchStream().uploadArchetypeUpdate(new numFilteredStream(gzipStr));
+        new MatchStream().uploadDataOptions(new numFilteredStream(gzipStr), false, true);
     
 
 /*
@@ -75,7 +84,7 @@ public class App {
 	    
 	    
    
-    	
+    
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -107,7 +116,7 @@ public class App {
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
         List<List<Matchup>> matchups = new ArrayList<List<Matchup>>();
         
-        int size = 15;
+        int size = 5;
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
 
@@ -164,8 +173,8 @@ public class App {
         
 /*
         System.out.println(group.matchupTable(10));
-        */
         
+        */
       
     }
     

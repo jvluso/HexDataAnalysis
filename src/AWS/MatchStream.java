@@ -26,6 +26,7 @@ public class MatchStream {
 	Table matchTable;
 	Table deckTable;
 	Table archetypeTable;
+	Table immortalArchetypeTable;
 	public MatchStream() throws JsonParseException, IOException {
 		
 
@@ -37,20 +38,28 @@ public class MatchStream {
         matchTable = dynamoDB.getTable("Matches");
         deckTable = dynamoDB.getTable("Decklists");
         archetypeTable = dynamoDB.getTable("Archetype");
+        immortalArchetypeTable = dynamoDB.getTable("ImmortalArchetype");
 		
 		
 		
 
 	}
 	
-	private void uploadNode(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
-		
+	private void uploadNode(JsonNode rootNode) throws JsonParseException, IOException{
 
-    	System.out.print("TournamentTime: ");
-    	System.out.println(rootNode.path("TournamentTime").asText());
-    	if(rootNode.has("TournamentType") && rootNode.path("TournamentType").asText().equals("Ladder")){
+		uploadNodeOptions(rootNode, false, false);
+	}
+		
+	private void uploadNodeOptions(JsonNode rootNode, boolean archetypeOnly, boolean immortalOnly) throws JsonParseException, IOException{
+			
+
+    	if(rootNode.has("TournamentType") && 
+    			((rootNode.path("TournamentType").asText().equals("Ladder") && !immortalOnly) ||
+    			 rootNode.path("TournamentType").asText().equals("Immortal"))){
 	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
-	        
+
+	    	System.out.print("TournamentTime: ");
+	    	System.out.println(rootNode.path("TournamentTime").asText());
 	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
 	
 	        try {
@@ -76,21 +85,26 @@ public class MatchStream {
 	        	.withJSON("Deck", game.path("PlayerTwoDeck").path("Deck").toString())
 	        	.withJSON("Sideboard", game.path("PlayerTwoDeck").path("Sideboard").toString());
 	        
-	        
-	        try {
-		        deckTable.putItem(p1,"attribute_not_exists(Deck)", null, null);
-	        } catch (ConditionalCheckFailedException e){}
-	        try{
-		        deckTable.putItem(p2,"attribute_not_exists(Deck)", null, null);
-	        } catch (ConditionalCheckFailedException e){}
+	        if(!archetypeOnly){
+		        try {
+			        deckTable.putItem(p1,"attribute_not_exists(Deck)", null, null);
+		        } catch (ConditionalCheckFailedException e){}
+		        try{
+			        deckTable.putItem(p2,"attribute_not_exists(Deck)", null, null);
+		        } catch (ConditionalCheckFailedException e){}
 	
+	        }
+	        
 			Map<String,String> expressionAttributeNames = new HashMap<String,String>();
-			expressionAttributeNames.put("#p", "Match");
 			
 			Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
-			expressionAttributeValues.put(":val",
-	        new HashSet<String>(Arrays.asList(matchKey)));
-	        
+			
+
+	        if(!archetypeOnly){
+				expressionAttributeNames.put("#p", "Match");
+				expressionAttributeValues.put(":val",
+		        new HashSet<String>(Arrays.asList(matchKey)));
+	        }
 			
 			deckTable.updateItem("HashCode", game.path("PlayerOneDeck").hashCode(),
 	        "ADD #p :val",
@@ -100,10 +114,14 @@ public class MatchStream {
 	        "ADD #p :val",
 	        expressionAttributeNames,
 	        expressionAttributeValues);
-	        
-	        ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
-	        ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), archetypeTable);
-	        
+
+			if(rootNode.path("TournamentType").asText().equals("Ladder")){
+				ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
+				ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), archetypeTable);
+			}else{
+				ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), immortalArchetypeTable);
+				ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), immortalArchetypeTable);
+			}
 	        
 	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
 
@@ -112,44 +130,10 @@ public class MatchStream {
 		
 	}
 
-	private void uploadArchetype(JsonNode rootNode, Table matchTable, Table deckTable, Table archetypeTable) throws JsonParseException, IOException{
+	private void uploadArchetype(JsonNode rootNode) throws JsonParseException, IOException{
 		
 
-    	System.out.print("TournamentTime: ");
-    	System.out.println(rootNode.path("TournamentTime").asText());
-    	if(rootNode.has("TournamentType") && rootNode.path("TournamentType").asText().equals("Ladder")){
-	        JsonNode game = rootNode.path("Games").path(0).path("Matches").path(0);
-	        
-	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
-	
-	        Item p1 = new Item()
-	        	.withPrimaryKey("HashCode", game.path("PlayerOneDeck").hashCode())
-	        	.withString("Champion", game.path("PlayerOneDeck").path("Champion").asText())
-	        	.withJSON("Deck", game.path("PlayerOneDeck").path("Deck").toString())
-	        	.withJSON("Sideboard", game.path("PlayerOneDeck").path("Sideboard").toString());
-	        Item p2 = new Item()
-	        	.withPrimaryKey("HashCode", game.path("PlayerTwoDeck").hashCode())
-	        	.withString("Champion", game.path("PlayerTwoDeck").path("Champion").asText())
-	        	.withJSON("Deck", game.path("PlayerTwoDeck").path("Deck").toString())
-	        	.withJSON("Sideboard", game.path("PlayerTwoDeck").path("Sideboard").toString());
-	        
-	        
-	
-			Map<String,String> expressionAttributeNames = new HashMap<String,String>();
-			expressionAttributeNames.put("#p", "Match");
-			
-			Map<String,Object> expressionAttributeValues = new HashMap<String,Object>();
-			expressionAttributeValues.put(":val",
-	        new HashSet<String>(Arrays.asList(matchKey)));
-	        
-	        ArchetypeStream.addItem(p1.withStringSet("Match", matchKey), archetypeTable);
-	        ArchetypeStream.addItem(p2.withStringSet("Match", matchKey), archetypeTable);
-	        
-	        
-	        System.out.println("PutItem succeeded: " + rootNode.path("TournamentTime").toString());
-
-
-    	}
+		uploadNodeOptions(rootNode, true, false);
 		
 	}
 
@@ -163,10 +147,10 @@ public class MatchStream {
         
         JsonNode rootNode = new ObjectMapper().readTree(parser);
         if(rootNode.has("TournamentId")){
-            uploadNode(rootNode, matchTable, deckTable, archetypeTable);
+            uploadNode(rootNode);
         }else{
 	        for(JsonNode node: rootNode){
-	            uploadNode(node, matchTable, deckTable, archetypeTable);
+	            uploadNode(node);
 	        	
 	        }
         }
@@ -175,7 +159,7 @@ public class MatchStream {
 	
 	
 	
-	public void uploadArchetypeUpdate(InputStream stream) throws JsonParseException, IOException{
+	public void uploadDataOptions(InputStream stream, boolean archetypeOnly, boolean immortalOnly) throws JsonParseException, IOException{
 
         JsonParser parser;
 		parser = new JsonFactory()
@@ -184,10 +168,10 @@ public class MatchStream {
         
         JsonNode rootNode = new ObjectMapper().readTree(parser);
         if(rootNode.has("TournamentId")){
-            uploadArchetype(rootNode, matchTable, deckTable, archetypeTable);
+            uploadNodeOptions(rootNode, archetypeOnly, immortalOnly);
         }else{
 	        for(JsonNode node: rootNode){
-	            uploadArchetype(node, matchTable, deckTable, archetypeTable);
+	            uploadNodeOptions(node, archetypeOnly, immortalOnly);
 	        	
 	        }
         }
@@ -200,7 +184,7 @@ public class MatchStream {
 	public void uploadJSON(JsonNode node) throws JsonParseException, IOException{
 
     	System.out.println(node);
-    	uploadNode(node, matchTable, deckTable, archetypeTable);
+    	uploadNode(node);
 
 	}
 }
