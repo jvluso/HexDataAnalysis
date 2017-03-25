@@ -36,7 +36,7 @@ public class MatchupLambda implements RequestStreamHandler {
 
         DynamoDB dynamoDB = new DynamoDB(client);
 
-        Table archetypeTable = dynamoDB.getTable("Archetype");
+        Table archetypeTable = dynamoDB.getTable("ImmortalArchetype");
         Table matchTable = dynamoDB.getTable("Matches");
 
         

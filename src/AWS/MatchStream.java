@@ -62,6 +62,9 @@ public class MatchStream {
 	    	System.out.println(rootNode.path("TournamentTime").asText());
 	        String matchKey = rootNode.path("TournamentTime").asText()+game.path("PlayerOne").asText();
 	
+	        boolean immortal = rootNode.path("TournamentType").asText().equals("Immortal");
+	        
+	        
 	        try {
 		        matchTable.putItem(new Item()
 		        .withPrimaryKey("TimePlayerKey", matchKey)
@@ -72,6 +75,7 @@ public class MatchStream {
 		        .withString("PlayerTwoWins", game.path("PlayerTwoWins").asText())
 		        .withNumber("PlayerOneDeck", game.path("PlayerOneDeck").hashCode())
 		        .withNumber("PlayerTwoDeck", game.path("PlayerTwoDeck").hashCode())
+		        .withBoolean("Immortal", immortal)
 		        ,"attribute_not_exists(TournamentTime)", null, null);
 	        } catch (ConditionalCheckFailedException e){}
 	        Item p1 = new Item()
