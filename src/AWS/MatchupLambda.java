@@ -13,6 +13,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,11 +64,26 @@ public class MatchupLambda implements RequestStreamHandler {
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
         List<List<Matchup>> matchups = new ArrayList<List<Matchup>>();
         
-        int size = 15;
+        int size = 5;
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
         
-        outputStream.write(group.matchupTable(size).getBytes());
+
+		ObjectMapper mapper = new ObjectMapper();
+		
+		ObjectNode node = mapper.createObjectNode();
+		ObjectNode headers = mapper.createObjectNode();
+		
+		headers.put("Access-Control-Allow-Headers", "*");
+		headers.put("Access-Control-Allow-Methods", "*");
+		headers.put("Access-Control-Allow-Origin", "*");
+		
+		node.put("statusCode", 200);
+		node.put("body", mapper.writeValueAsString(group.matchupTable(size)));
+		node.putPOJO("headers", headers);
+		
+        
+        outputStream.write(mapper.writeValueAsString(node).getBytes());
       
     }
     

@@ -63,7 +63,7 @@ public class ArchetypeGroup {
 	}
 	
 
-	public String matchupTable(int size){
+	public ArrayNode matchupTable(int size){
 		
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode arrayNode = mapper.createArrayNode();
@@ -90,13 +90,6 @@ public class ArchetypeGroup {
         }
         
        
-        
-        try {
-			return mapper.writeValueAsString(arrayNode);
-		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return "{}";
+		return arrayNode;
 	}
 }

@@ -82,7 +82,43 @@ public class App {
 	    parser.close();
 	*/    
 	    
-	    
+
+        
+        AmazonDynamoDBClient client = new AmazonDynamoDBClient();
+        client.withRegion(Regions.US_WEST_1);
+
+        DynamoDB dynamoDB = new DynamoDB(client);
+
+        Table archetypeTable = dynamoDB.getTable("ImmortalArchetype");
+
+        
+        String FilterExpression = "";
+        int itt = 0;
+        ValueMap valMap = new ValueMap();
+        for(String d:RecentDates.getInstance().getDateList()){
+        	if(FilterExpression == ""){
+        		FilterExpression = "#d <> :d" + itt;
+        	}else{
+        		FilterExpression = FilterExpression + " and #d <> :d" + itt;
+        	}
+        	valMap = valMap.with(":d"+itt, d);
+        	itt++;
+        }
+        
+        
+        ScanSpec aspec = new ScanSpec().withFilterExpression(FilterExpression)
+        							   .withNameMap(new NameMap()
+        							       .with("#d", "Date"))
+        		                       .withValueMap(valMap);
+        
+
+        ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
+        
+        for(Item s : archetypeItems){
+        	System.out.println(s.getString("date"));
+        	archetypeTable.deleteItem("name",s.getString("name"),"date",s.getString("date"));
+        }
+/*
    
     
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
