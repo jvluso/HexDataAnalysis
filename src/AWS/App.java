@@ -83,7 +83,7 @@ public class App {
 	*/    
 	    
 
-        
+        /*
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
         client.withRegion(Regions.US_WEST_1);
 
@@ -115,10 +115,11 @@ public class App {
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
         
         for(Item s : archetypeItems){
-        	System.out.println(s.getString("date"));
-        	archetypeTable.deleteItem("name",s.getString("name"),"date",s.getString("date"));
+        	System.out.println(s.getString("Date"));
+        	archetypeTable.deleteItem("Name",s.getString("Name"),"Date",s.getString("Date"));
         }
-/*
+        */
+
    
     
         AmazonDynamoDBClient client = new AmazonDynamoDBClient();
@@ -152,7 +153,7 @@ public class App {
         ItemCollection<ScanOutcome> archetypeItems = archetypeTable.scan(aspec);
         List<List<Matchup>> matchups = new ArrayList<List<Matchup>>();
         
-        int size = 5;
+        int size = 10;
         
         ArchetypeGroup group = new ArchetypeGroup(archetypeItems,matchTable);
 

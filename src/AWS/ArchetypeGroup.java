@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ArchetypeGroup {
 	
-	private List<Archetype> archetypes;
+	private List<ArchetypeData> archetypes;
 	private ItemCollection<ScanOutcome> archetypeResult;
 	private Table matchTable;
 
@@ -31,23 +31,23 @@ public class ArchetypeGroup {
 	
 	private void init(){
 
-		Map<String,Archetype> champs = new HashMap<String,Archetype>();
+		Map<String,ArchetypeData> champs = new HashMap<String,ArchetypeData>();
 
         for(Item o:archetypeResult){
         	String champ=o.getString("Name");
         	if(champs.get(champ)==null){
-        		Archetype a=new Archetype(champ);
+        		ArchetypeData a=new ArchetypeData(champ);
         		a.addEntry(o);
         		champs.put(champ,a);
         	}else{
-        		Archetype a=champs.get(champ);
+        		ArchetypeData a=champs.get(champ);
         		a.addEntry(o);
         		champs.put(champ,a);
         	}
         }
         
 
-        Archetype[] champList = champs.values().toArray(new Archetype[0]);
+        ArchetypeData[] champList = champs.values().toArray(new ArchetypeData[0]);
         Arrays.sort(champList);
         archetypes = Arrays.asList(champList);
         
@@ -58,7 +58,7 @@ public class ArchetypeGroup {
 		return new Matchup(archetypes.get(a), archetypes.get(b), matchTable);
 	}
 	
-	public Archetype getChamp(int i){
+	public ArchetypeData getChamp(int i){
 		return archetypes.get(i);
 	}
 	
