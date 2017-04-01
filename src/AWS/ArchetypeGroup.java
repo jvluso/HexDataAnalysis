@@ -17,23 +17,19 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ArchetypeGroup {
 	
-	private List<ArchetypeData> archetypes;
-	private ItemCollection<ScanOutcome> archetypeResult;
-	private Table matchTable;
+	private List<Archetype> archetypes;
+	private Map<Matchup,WinRate> matchups;
 
 	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypeItems, Table match){
 		
-		archetypeResult = archetypeItems;
-		matchTable = match;
-		
-		init();
+		init(archetypeItems);
 	}
 	
-	private void init(){
+	private void addCollection(ItemCollection<ScanOutcome> archetypeItems){
 
 		Map<String,ArchetypeData> champs = new HashMap<String,ArchetypeData>();
 
-        for(Item o:archetypeResult){
+        for(Item o:archetypeItems){
         	String champ=o.getString("Name");
         	if(champs.get(champ)==null){
         		ArchetypeData a=new ArchetypeData(champ);
@@ -49,13 +45,16 @@ public class ArchetypeGroup {
 
         ArchetypeData[] champList = champs.values().toArray(new ArchetypeData[0]);
         Arrays.sort(champList);
-        archetypes = Arrays.asList(champList);
+        archetypes = new ArrayList<Archetype>();
+        for(ArchetypeData a : champList){
+        	archetypes.add(a.getArchetype());
+        }
         
 	}
 
 	
 	public Matchup getMatchup(int a, int b){
-		return new Matchup(archetypes.get(a), archetypes.get(b), matchTable);
+		return new Matchup(archetypes.get(a), archetypes.get(b));
 	}
 	
 	public ArchetypeData getChamp(int i){
@@ -72,9 +71,9 @@ public class ArchetypeGroup {
         	for(int j=0;j<i;j++){
         		Matchup m=getMatchup(i, j);
         		ObjectNode node = arrayNode.addObject();
-        		node.put("AName", getChamp(i).getName());
-        		node.put("BName", getChamp(j).getName());
-        		node.put("ARank", i);
+        		node.put("AName", m.geta().getName());
+        		node.put("BName", m.getb().getName());
+        		node.put("ARank", archetypes.indexOf(m.geta()));
         		node.put("BRank", j);
         		node.put("AWins", m.getWins());
         		node.put("BWins", m.getLosses());

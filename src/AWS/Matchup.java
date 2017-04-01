@@ -13,8 +13,6 @@ public class Matchup {
 	
 	private Archetype a;
 	private Archetype b;
-	private int wins;
-	private int losses;
 
 	public Matchup(ArchetypeData archetypeA, ArchetypeData archetypeB){
 		initArchetypeData(archetypeA, archetypeB);
@@ -24,15 +22,9 @@ public class Matchup {
 		initArchetypes(archetypeA, archetypeB);
 	}
 	
-	public Matchup(ArchetypeData archetypeA, ArchetypeData archetypeB,ItemCollection<ScanOutcome> result){
-		initArchetypeData(archetypeA, archetypeB);
-		if(!a.equals(b)){
-			addCollection(archetypeA,archetypeB,result);
-		}
-	}
 	
 
-	public Matchup(ArchetypeData archetypeA, ArchetypeData archetypeB,Table matchTable){
+	public void addTable(ArchetypeData archetypeA, ArchetypeData archetypeB,Table matchTable, WinRate winRate) throws Exception{
 		initArchetypeData(archetypeA, archetypeB);
 		if(!a.equals(b)){
 	        for (String m: matcha(archetypeA,archetypeB).getMatches()) {
@@ -44,7 +36,7 @@ public class Matchup {
 
 	            	ItemCollection<QueryOutcome> items = matchTable.query(spec);
 	            	
-	            	addCollection(archetypeA,archetypeB,items);
+	            	addCollection(archetypeA,archetypeB,items,winRate);
 	            }
 	        }
 		}
@@ -56,8 +48,6 @@ public class Matchup {
 	}
 	
 	private void initArchetypes(Archetype archetypeA, Archetype archetypeB){
-		wins=0;
-		losses=0;
 		int compare = archetypeA.getName().compareTo(archetypeB.getName());
 		if(compare > 0){
 			a=archetypeA;
@@ -68,25 +58,38 @@ public class Matchup {
 		}
 	}
 	
-	private void addCollection(ArchetypeData archetypeA, ArchetypeData archetypeB,ItemCollection result){
-        for (Object o : result) {
-        	Item item = (Item) o;
-            if(matcha(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerOneDeck")) &&
-            		matchb(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerTwoDeck"))){
-            	if(item.getInt("PlayerOneWins")==2){
-            		wins++;
-            	}else{
-            		losses++;
-            	}
-            }else if(matchb(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerOneDeck")) &&
-            		matcha(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerTwoDeck"))){
-            	if(item.getInt("PlayerOneWins")!=2){
-            		wins++;
-            	}else{
-            		losses++;
-            	}
-            }
-        }
+	public void addCollection(ArchetypeData archetype1, ArchetypeData archetype2,ItemCollection result, WinRate winRate) throws Exception{
+		ArchetypeData archetypeA;
+		ArchetypeData archetypeB;
+		if(a.equals(archetype1.getArchetype())&&b.equals(archetype2.getArchetype())){
+			archetypeA=archetype1;
+			archetypeB=archetype2;
+		}else if(a.equals(archetype2.getArchetype())&&b.equals(archetype1.getArchetype())){
+			archetypeA=archetype2;
+			archetypeB=archetype1;
+		}else{
+			throw new Exception("Incorrect archetypes");
+		}
+		if(!a.equals(b)){
+	        for (Object o : result) {
+	        	Item item = (Item) o;
+	            if(matcha(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerOneDeck")) &&
+	            		matchb(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerTwoDeck"))){
+	            	if(item.getInt("PlayerOneWins")==2){
+	            		winRate.addWin();
+	            	}else{
+	            		winRate.addLoss();
+	            	}
+	            }else if(matchb(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerOneDeck")) &&
+	            		matcha(archetypeA,archetypeB).getDeckListHashes().contains(item.getInt("PlayerTwoDeck"))){
+	            	if(item.getInt("PlayerOneWins")!=2){
+	            		winRate.addWin();
+	            	}else{
+	            		winRate.addLoss();
+	            	}
+	            }
+	        }
+		}
 	}
 
 	public ArchetypeData matcha(ArchetypeData archetypeA, ArchetypeData archetypeB){
@@ -111,11 +114,11 @@ public class Matchup {
 		return b;
 	}
 	
-	public int getWins(Archetype archetype){
+	public int getWins(Archetype archetype, WinRate winRate){
 		if(archetype.equals(a)){
-			return wins;
+			return winRate.getWins();
 		}else if(archetype.equals(b)){
-			return losses;
+			return winRate.getLosses();
 		}
 		return 0;
 	}
