@@ -24,11 +24,12 @@ public class Matchup {
 	
 	
 
-	public void addTable(ArchetypeData archetypeA, ArchetypeData archetypeB,Table matchTable, WinRate winRate) throws Exception{
+	public WinRate addTable(ArchetypeData archetypeA, ArchetypeData archetypeB,Table matchTable) throws Exception{
+		WinRate winRate = new WinRate();
 		initArchetypeData(archetypeA, archetypeB);
 		if(!a.equals(b)){
-	        for (String m: matcha(archetypeA,archetypeB).getMatches()) {
-	            if(matchb(archetypeA,archetypeB).getMatches().contains(m)){
+	        for (String m: archetypeA.getMatches()) {
+	            if(archetypeB.getMatches().contains(m)){
 	            	QuerySpec spec = new QuerySpec()
 	            	.withKeyConditionExpression("TimePlayerKey  = :m")
 	                .withValueMap(new ValueMap()
@@ -40,6 +41,7 @@ public class Matchup {
 	            }
 	        }
 		}
+		return winRate;
 	}
 	
 

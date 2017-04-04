@@ -17,12 +17,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class ArchetypeGroup {
 	
-	private List<Archetype> archetypes;
+	private List<ArchetypeData> archetypes;
 	private Map<Matchup,WinRate> matchups;
 
 	public ArchetypeGroup(ItemCollection<ScanOutcome> archetypeItems, Table match){
 		
-		init(archetypeItems);
+		addCollection(archetypeItems);
 	}
 	
 	private void addCollection(ItemCollection<ScanOutcome> archetypeItems){
@@ -45,10 +45,7 @@ public class ArchetypeGroup {
 
         ArchetypeData[] champList = champs.values().toArray(new ArchetypeData[0]);
         Arrays.sort(champList);
-        archetypes = new ArrayList<Archetype>();
-        for(ArchetypeData a : champList){
-        	archetypes.add(a.getArchetype());
-        }
+        archetypes = Arrays.asList(champList);
         
 	}
 
@@ -61,8 +58,22 @@ public class ArchetypeGroup {
 		return archetypes.get(i);
 	}
 	
+	public WinRate getWinRate(Matchup m, Table matchTable) throws Exception{
+		if(!matchups.containsKey(m)){ 
+			matchups.put(m,m.addTable(m.geta().findData(archetypes), m.getb().findData(archetypes), matchTable));
+		}
+		return matchups.get(m);
+	}
 
-	public ArrayNode matchupTable(int size){
+	public WinRate getWinRate(Matchup m) throws Exception{
+		if(!matchups.containsKey(m)){ 
+			throw new Exception("Win Rate not found");
+		}
+		return matchups.get(m);
+	}
+	
+
+	public ArrayNode matchupTable(int size) throws Exception{
 		
 		ObjectMapper mapper = new ObjectMapper();
 		ArrayNode arrayNode = mapper.createArrayNode();
@@ -70,20 +81,21 @@ public class ArchetypeGroup {
         for(int i=0;i<size; i++){
         	for(int j=0;j<i;j++){
         		Matchup m=getMatchup(i, j);
+        		WinRate w=getWinRate(m);
         		ObjectNode node = arrayNode.addObject();
         		node.put("AName", m.geta().getName());
         		node.put("BName", m.getb().getName());
         		node.put("ARank", archetypes.indexOf(m.geta()));
-        		node.put("BRank", j);
-        		node.put("AWins", m.getWins());
-        		node.put("BWins", m.getLosses());
-        		System.out.print(getChamp(i).getName());
+        		node.put("BRank", archetypes.indexOf(m.getb()));
+        		node.put("AWins", w.getWins());
+        		node.put("BWins", w.getLosses());
+        		System.out.print(m.geta().getName());
         		System.out.print(" vs. ");
-        		System.out.println(getChamp(j).getName());
+        		System.out.println(m.getb().getName());
 
-        		System.out.print(m.getWins());
+        		System.out.print(w.getWins());
         		System.out.print(" to ");
-        		System.out.println(m.getLosses());
+        		System.out.println(w.getLosses());
         		
         	}
         }
